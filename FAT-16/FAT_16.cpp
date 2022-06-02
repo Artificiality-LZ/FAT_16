@@ -71,9 +71,15 @@ bool FAT_16::delete_fat(string name)
 {
 	for (int i = 0; i < work_Catalogue->chlid_catalogues.size(); i++)
 	{
+		
 		if (work_Catalogue->chlid_catalogues[i]->name == name)
 		{
+			Catalogue* temp;
 			del_recursion(work_Catalogue->chlid_catalogues[i], i);
+			temp = work_Catalogue->chlid_catalogues[i];
+			work_Catalogue->chlid_catalogues.erase(work_Catalogue->chlid_catalogues.begin() + i);
+			delete temp;
+
 			cout << "成功删除名为" << name << "的目录和子文件！\n";
 			return true;
 		}
@@ -158,7 +164,7 @@ void FAT_16::cd(string na)
 			work_Catalogue = root_Catalogue;
 		}
 	}
-	else
+	else if(!path.size())
 	{
 		work_Catalogue = root_Catalogue;
 	}
