@@ -74,11 +74,12 @@ bool FAT_16::delete_fat(string name)
 		
 		if (work_Catalogue->chlid_catalogues[i]->name == name)
 		{
-			Catalogue* temp;
+			//Catalogue* temp;
+			//temp = work_Catalogue->chlid_catalogues[i];
 			del_recursion(work_Catalogue->chlid_catalogues[i], i);
-			temp = work_Catalogue->chlid_catalogues[i];
-			work_Catalogue->chlid_catalogues.erase(work_Catalogue->chlid_catalogues.begin() + i);
-			delete temp;
+			
+			//work_Catalogue->chlid_catalogues.erase(work_Catalogue->chlid_catalogues.begin() + i);
+			//delete temp;
 
 			cout << "成功删除名为" << name << "的目录和子文件！\n";
 			return true;
@@ -204,7 +205,15 @@ string FAT_16::get_path()
 	string re = ">:";
 	if (work_file != nullptr)
 	{
-		re += "[" + work_file->name + "]:";
+		try
+		{
+			re += "[" + work_file->name + "]:";
+		}
+		catch (...)
+		{
+			work_file = nullptr;
+			cout << "正在打开的文件已经被删除,请注意！\n";
+		}
 	}
 	Catalogue* pa = work_Catalogue;
 	while (pa->parent_catalogue != nullptr)
@@ -239,7 +248,7 @@ bool FAT_16::open_pre(string path_name)
 	if (path_name.find("\\") == string::npos)
 	{
 		name = path_name;
-		path = "";
+		path = ".\\";
 	}
 	else
 	{
@@ -383,27 +392,26 @@ void FAT_16::read_file()
 //删除目录项用的递归调用
 void FAT_16::del_recursion(Catalogue* catalogue, int i)
 {
-	if (catalogue->chlid_catalogues.size() == 0)
-	{
-		for (int i = 0; i < catalogue->chlid_files.size(); i++)
-		{
-			delete_fatdata(catalogue->chlid_files[i]->first_num, catalogue->chlid_files[i]->end_num);
-			delete catalogue->chlid_files[i];
-			catalogue->chlid_files.erase(catalogue->chlid_files.begin() + i);
-		}
-		if (catalogue->parent_catalogue != nullptr)
-		{
-			catalogue->parent_catalogue->chlid_catalogues.erase(catalogue->parent_catalogue->chlid_catalogues.begin() + i);
-			delete catalogue;
-		}
-	}
-	else
+
+	if (catalogue->chlid_catalogues.size() != 0)
 	{
 		for (int j = 0; j < catalogue->chlid_catalogues.size(); j++)
 		{
 			del_recursion(catalogue->chlid_catalogues[j], j);
 		}
 	}
+	for (int i = 0; i < catalogue->chlid_files.size(); i++)
+	{
+		delete_fatdata(catalogue->chlid_files[i]->first_num, catalogue->chlid_files[i]->end_num);
+		delete catalogue->chlid_files[i];
+		catalogue->chlid_files.erase(catalogue->chlid_files.begin() + i);
+	}
+	if (catalogue->parent_catalogue != nullptr)
+	{
+		catalogue->parent_catalogue->chlid_catalogues.erase(catalogue->parent_catalogue->chlid_catalogues.begin() + i);
+		delete catalogue;
+	}
+
 }
 
 
